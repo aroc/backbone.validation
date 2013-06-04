@@ -1,3 +1,4 @@
+// Eric's Version at https://github.com/aroc/backbone.validation
 // Backbone.Validation v0.7.1
 //
 // Copyright (c) 2011-2012 Thomas Pedersen
@@ -120,11 +121,22 @@
         // with a validation method to call, the value to validate against
         // and the specified error message, if any
         return _.reduce(attrValidationSet, function(memo, attrValidation) {
-          _.each(_.without(_.keys(attrValidation), 'msg'), function(validator) {
+          // Don't run this validator if the onlyWhen function returns false.
+          
+          var attrValidationCopy = _.clone(attrValidation);
+
+          if (attrValidationCopy.hasOwnProperty('onlyWhen')) {
+            if (!model[attrValidationCopy.onlyWhen]()) {
+              return;
+            } else {
+              delete attrValidationCopy['onlyWhen'];
+            }
+          }
+          _.each(_.without(_.keys(attrValidationCopy), 'msg'), function(validator) {
             memo.push({
               fn: defaultValidators[validator],
-              val: attrValidation[validator],
-              msg: attrValidation.msg
+              val: attrValidationCopy[validator],
+              msg: attrValidationCopy.msg
             });
           });
           return memo;
